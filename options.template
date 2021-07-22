@@ -1,0 +1,5 @@
+verbose
+outdir +b/repo
+dbdir +b/db
+confdir +b/conf
+

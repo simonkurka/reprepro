@@ -1,0 +1,8 @@
+Key-Type: __KEYTYPE__
+Key-Length: __KEYLENGTH__
+Subkey-Type: __SUBKEYTYPE__
+Subkey-Length: __SUBKEYLENGTH__
+Name-Real: __NAME__
+Name-Email: __EMAIL__
+Expire-Date: __EXPIRE__
+

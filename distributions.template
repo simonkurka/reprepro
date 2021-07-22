@@ -1,0 +1,9 @@
+Origin: __ORIGIN__
+Label: __LABEL__
+Suite: __SUITE__
+Codename: __RELEASE__
+Architectures: __ARCHITECTURES__
+Components: __COMPONENTS__
+Description: __DESCRIPTION__
+SignWith: __KEY__
+
