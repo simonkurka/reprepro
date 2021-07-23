@@ -41,6 +41,13 @@ else
 	gpg --batch --pinentry-mode loopback --passphrase-fd 3 --armor --export-secret-keys "${NAME} <${EMAIL}>" >/data/conf/secret.gpg
 fi
 
+if [ "${VERIFY}" = "true" ] && [ ! -f /data/conf/trusted.gpg ]; then
+	echo -e "${BRED}No trusted keyring found in '/data/conf/trusted.gpg'. Verification of .deb archives is not possible.${RES}"
+elif [ -f /data/conf/trusted.gpg ]; then
+	echo -e "${BGRE}Trusted keyring found. Importing ...${RES}"
+	gpg --batch --import /data/conf/trusted.gpg
+fi
+
 if [ ! -f /data/conf/distributions ]; then
 	echo -e "${YEL}distributions file not found! Creating ...${RES}"
 	sed -e "s/__ORIGIN__/${ORIGIN}/g" \
@@ -59,11 +66,16 @@ if [ ! -f /data/conf/options ]; then
 fi
 
 FILES=$(find /data/input -type f -name '*.deb'; echo -n "EOF")
-echo -e "${BGRE}Found $(echo -n "${FILES%EOF}" | wc -l) files. Processing ...${RES}"
+echo -e "${BGRE}Found $(echo -n "${FILES%EOF}" | wc -l) file(s). Processing ...${RES}"
 echo -n "${FILES%EOF}" | while IFS= read -r file; do
+	if [ "${VERIFY}" = "true" ] && ! dpkg-sig --verify "${file}"; then
+		echo -e "${RED}Verification of ${file} failed! Skipping ...${RES}"
+		continue
+	fi
 	reprepro -b /data includedeb "${RELEASE}" "${file}" && \
 	rm -f "${file}" && \
-	echo -e "${GRE}${file} processed!${RES}"
+	echo -e "${GRE}${file} processed!${RES}" || \
+	echo -e "${RED}Inclusion of ${file} failed!${RES}"
 done
 echo -e "${BGRE}Finished!${RES}"
 

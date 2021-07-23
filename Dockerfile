@@ -2,9 +2,11 @@ FROM ubuntu:focal
 
 VOLUME /data
 
-RUN apt update && apt install -y reprepro gpg-agent && rm -rf /var/lib/apt/lists/*
+ENV TZ="Europe/Berlin"
+RUN DEBIAN_FRONTEND="noninteractive" apt update && DEBIAN_FRONTEND="noninteractive" apt install -y reprepro gpg-agent dpkg-sig && rm -rf /var/lib/apt/lists/*
 
 ENV PASS=""
+ENV VERIFY="true"
 ENV ORIGIN="aktin"
 ENV LABEL="aktin"
 ENV SUITE="stable"
