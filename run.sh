@@ -9,12 +9,12 @@ readonly BYEL='\e[1;33m'
 
 mkdir -p /data/{conf,db,repo,input}
 gpg-agent --daemon
-if [ -f /data/conf/secret.gpg ]; then
+if [ -f /data/conf/keypair.gpg ]; then
 	echo -e "${BGRE}Found secret! Importing ...${RES}"
 	# Import Private Key
-	KEY=$(gpg --with-colons --show-key /data/conf/secret.gpg | grep -m 1 '^sec' | cut -d':' -f5)
-	/usr/lib/gnupg2/gpg-preset-passphrase --preset --passphrase "${PASS}" "$(gpg --with-colons --show-key /data/conf/secret.gpg | grep -m 1 '^grp' | cut -d':' -f10)"
-	gpg --batch --import /data/conf/secret.gpg
+	KEY=$(gpg --with-colons --show-key /data/conf/keypair.gpg | grep -m 1 '^sec' | cut -d':' -f5)
+	/usr/lib/gnupg2/gpg-preset-passphrase --preset --passphrase "${PASS}" "$(gpg --with-colons --show-key /data/conf/keypair.gpg | grep -m 1 '^grp' | cut -d':' -f10)"
+	gpg --batch --import /data/conf/keypair.gpg
 else
 	echo -e "${YEL}No secret found! Creating one ...${RES}"
 	echo -e "${BRED}Importing your own secret is recommended. Place it in '/data/conf/secret.gpg'.${RES}"
@@ -25,20 +25,20 @@ else
 	    -e "s/__NAME__/${NAME}/g" \
 	    -e "s/__EMAIL__/${EMAIL}/g" \
 	    -e "s/__EXPIRE__/${EXPIRE}/g" \
-	    /usr/share/aktin-reprepro/gen-key.template > ./gen-key
-	
+	    /usr/share/aktin-reprepro/gen-key.template >./gen-key
+
 	# Generate Keypair
 	exec 3< <(echo "${PASS}")
 	gpg --batch --pinentry-mode loopback --passphrase-fd 3 --gen-key gen-key
 	KEY=$(gpg --with-colons --list-secret-keys | grep -m 1 '^sec' | cut -d':' -f5)
 	/usr/lib/gnupg2/gpg-preset-passphrase --preset --passphrase "${PASS}" "$(gpg --with-colons --list-secret-keys | grep -m 1 '^grp' | cut -d':' -f10)"
-	
-	# Export Public Key
-	gpg --armor --export "${NAME} <${EMAIL}>" >/data/conf/public.gpg
-	
+
 	# Export Private Key
 	exec 3< <(echo "${PASS}")
-	gpg --batch --pinentry-mode loopback --passphrase-fd 3 --armor --export-secret-keys "${NAME} <${EMAIL}>" >/data/conf/secret.gpg
+	gpg --batch --pinentry-mode loopback --passphrase-fd 3 --armor --export-secret-keys "${NAME} <${EMAIL}>" >/data/conf/keypair.gpg
+
+	# Export Public Key
+	gpg --armor --export "${NAME} <${EMAIL}>" >>/data/conf/keypair.gpg
 fi
 
 if [ "${VERIFY}" = "true" ] && [ ! -f /data/conf/trusted.gpg ]; then
@@ -58,11 +58,11 @@ if [ ! -f /data/conf/distributions ]; then
 	    -e "s/__COMPONENTS__/${COMPONENTS}/g" \
 	    -e "s/__DESCRIPTION__/${DESCRIPTION}/g" \
 	    -e "s/__KEY__/${KEY}/g" \
-	    /usr/share/aktin-reprepro/distributions.template > /data/conf/distributions
+	    /usr/share/aktin-reprepro/distributions.template >/data/conf/distributions
 fi
 if [ ! -f /data/conf/options ]; then
 	echo -e "${YEL}options file not found! Creating ...${RES}"
-	sed -e "" /usr/share/aktin-reprepro/options.template > /data/conf/options
+	sed -e "" /usr/share/aktin-reprepro/options.template >/data/conf/options
 fi
 
 FILES=$(find /data/input -type f -name '*.deb'; echo -n "EOF")
