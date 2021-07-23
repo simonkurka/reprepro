@@ -35,10 +35,15 @@ else
 
 	# Export Private Key
 	exec 3< <(echo "${PASS}")
-	gpg --batch --pinentry-mode loopback --passphrase-fd 3 --armor --export-secret-keys "${NAME} <${EMAIL}>" >/data/conf/keypair.gpg
+	gpg --batch --pinentry-mode loopback --passphrase-fd 3 --armor --export-secret-keys "${KEY}" >/data/conf/keypair.gpg
 
 	# Export Public Key
-	gpg --armor --export "${NAME} <${EMAIL}>" >>/data/conf/keypair.gpg
+	gpg --armor --export "${KEY}" >>/data/conf/keypair.gpg
+fi
+
+if [ ! -f /data/repo/aktin.gpg ]; then
+	echo -e "${GRE}Exporting GPG public key to repository ...${RES}"
+	gpg --armor --export "${KEY}" >/data/repo/aktin.gpg
 fi
 
 if [ "${VERIFY}" = "true" ] && [ ! -f /data/conf/trusted.gpg ]; then
